@@ -1,0 +1,9 @@
+# train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
+train: ./data_traffic/train_data/images/train  
+val: ./data_traffic/train_data/images/val  
+
+# number of classes
+nc: 9
+
+# class names
+names: ['CamNguocChieu','CamXeTai','CamReTrai','CamRePhai','CamDoXe','HieuLenh','NguoiDiBo','VongXoay','XeBuyt']
