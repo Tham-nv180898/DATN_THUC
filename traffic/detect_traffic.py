@@ -49,6 +49,7 @@ class Detect_Traffic:
         prediction = non_max_suppression(prediction, self._conf_threshold, self._iou_threshold, classes=None)
         print(prediction)
         number_object = 0
+        object_cls = {}
         for i, det in enumerate(prediction):
             if len(det):
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], org_img.shape).round()
@@ -57,6 +58,7 @@ class Detect_Traffic:
                     conf = conf.item()
                     label = names[c] + " " + str(round(conf, 2))
                     plot_one_box(xy_xy, org_img, label=label, color=colors(c, True), line_thickness=1)
+                    object_cls[number_object] = c
                     number_object += 1
-        returned_data = (org_img, number_object)
+        returned_data = (org_img, number_object, object_cls)
         return returned_data

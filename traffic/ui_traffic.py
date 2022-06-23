@@ -1,14 +1,22 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QDialog, QApplication, QFileDialog
+from PyQt5.QtWidgets import QDialog, QApplication, QFileDialog, QMessageBox
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
-import cv2
 from detect_traffic import Detect_Traffic
 import sys
-from PyQt5.QtGui import QPixmap,QFont
+from PyQt5.QtGui import QPixmap, QFont
 
 
 class Ui_MainWindow(QDialog):
     _file_name = None
+    _dict_object = None
+    _list_cls = ['./img_traffic/cam_nguoc_chieu.png', './img_traffic/cam_xe_tai.png',
+                 './img_traffic/cam_re_trai.png', './img_traffic/cam_re_phai.png',
+                 './img_traffic/cam_do_xe.png', './img_traffic/hieu_lenh.png',
+                 './img_traffic/nguoi_di_bo.png',
+                 './img_traffic/vong_xoay.png', './img_traffic/xe_bus.png']
+
+    _list_label = ['cấm ngược chiều', 'cấm xe tải', 'cấm rẽ trái', 'cấm rẽ phải', 'cấm đỗ xe', 'hiệu lệnh',
+                   'người đi bộ', 'vòng xoáy', 'xe bus']
 
     def setup_ui(self, main_window):
         main_window.setObjectName("MainWindow")
@@ -159,18 +167,49 @@ class Ui_MainWindow(QDialog):
         weight_path = "weight_traffic.pt"
         detect_traffic = Detect_Traffic()
         detect_traffic.set_spec(self._file_name[0], weight_path)
-        bgr_img, number_object = detect_traffic.detect_image()
+        bgr_img, number_object, self._dict_object = detect_traffic.detect_image()
         height, width, channel = bgr_img.shape
         byte_per_line = 3 * width
         qt_img = QtGui.QImage(bgr_img.data, width, height, byte_per_line, QtGui.QImage.Format_RGB888).rgbSwapped()
         pixmap_image = QPixmap.fromImage(qt_img)
-        pixmap_image = pixmap_image.scaled(self.image_view.width() - 35, self.image_view.height() - 35,
-                                           Qt.IgnoreAspectRatio)
-        self.image_view.setPixmap(pixmap_image)
+        pixmap_image1 = pixmap_image.scaled(self.image_view.width() - 35, self.image_view.height() - 35,
+                                            Qt.IgnoreAspectRatio)
+        self.image_view.setPixmap(pixmap_image1)
         self.image_view.setAlignment(Qt.AlignCenter)
         self.object_number.setFont(QFont('Arial', 20))
         self.object_number.setText(str(number_object))
         self.object_number.setAlignment(Qt.AlignCenter)
+        self.object_index.setMaximum(number_object)
+        self.object_index.valueChanged.connect(self.set_value_changed)
+        if len(self._dict_object) != 0 and self._dict_object is not None:
+            first_cls = self._dict_object.get(0)
+            pixmap_image0 = QPixmap(self._list_cls[first_cls])
+            pixmap_image0 = pixmap_image0.scaled(self.object_image.width() - 20, self.object_image.height() - 20,
+                                                 Qt.IgnoreAspectRatio)
+            self.object_image.setPixmap(pixmap_image0)
+            self.object_image.setAlignment(Qt.AlignCenter)
+            self.object_name.setText(self._list_label[first_cls])
+            self.object_name.setAlignment(Qt.AlignCenter)
+
+    def set_value_changed(self):
+        current_value = self.object_index.value()
+        print(current_value)
+        if len(self._dict_object) != 0 and self._dict_object is not None:
+            cls = self._dict_object.get(current_value - 1)
+            pixmap_image0 = QPixmap(self._list_cls[cls])
+            pixmap_image0 = pixmap_image0.scaled(self.object_image.width() - 20, self.object_image.height() - 20,
+                                                 Qt.IgnoreAspectRatio)
+            self.object_image.setPixmap(pixmap_image0)
+            self.object_image.setAlignment(Qt.AlignCenter)
+            self.object_name.setText(self._list_label[cls])
+            self.object_name.setAlignment(Qt.AlignCenter)
+
+    def show_popup(self):
+        msg = QMessageBox()
+        msg.setWindowTitle('message')
+        msg.setText('Error')
+        msg.setIcon(QMessageBox.Information)
+        x = msg.exec_()
 
     def add_file_path(self):
         self._file_name = QFileDialog.getOpenFileName(parent=self, caption='Open file', directory='',
